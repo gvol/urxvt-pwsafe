@@ -167,18 +167,19 @@ sub do_password {
         $self->real_initdb($db_pass); # re-init database, yes this is now spaghetti code
 
         my $term = $self->{term};
-        my ($row, $col) = $term->screen_cur();
-        my $line = $term->line($row);
-        my $text = $line->t();
-
-        # TODO: make this read from .Xresources
-        if ( $text =~ /^(\w+)(?:[']s)? [Pp]assword:\s*$/) {
-            my %db = %{$self->{db}};
-            my $pass = $db{$1};
-            if ($pass) {
-                $self->tt_write($pass. "\n");
-                $self->leave;
-                return;
+        my $regex = $term->x_resource("pwsafe.user-regex");
+        if ( $regex ) {
+            my ($row, $col) = $term->screen_cur();
+            my $line = $term->line($row);
+            my $text = $line->t();
+            if ( $text =~ /$regex/ ) {
+                my %db = %{$self->{db}};
+                my $pass = $db{$1};
+                if ($pass) {
+                    $self->tt_write($pass. "\n");
+                    $self->leave;
+                    return;
+                }
             }
         }
 
